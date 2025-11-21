@@ -77,22 +77,15 @@ public class Securityconfig{
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthfilter jwtAuthfilter) throws Exception{
 
         http.csrf(AbstractHttpConfigurer::disable)
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeHttpRequests(
-                        authorizeRequest ->
-                                authorizeRequest.
-                                        requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                .requestMatchers("/login","/createUser").permitAll()
-                                .anyRequest().authenticated()
+                .authorizeHttpRequests(authorizeRequest -> authorizeRequest
+                                        .requestMatchers("/h2-console","/h2-console/**").permitAll()
+                                        .requestMatchers("/createUser").permitAll()
+                                        .requestMatchers("/login").permitAll()
+                                        .anyRequest().authenticated()
                 )
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: " + authException.getMessage())
-                        )
-                        .accessDeniedHandler((request, response, accessDeniedException) ->
-                                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden: " + accessDeniedException.getMessage())
-                        )
-                ).sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthfilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
